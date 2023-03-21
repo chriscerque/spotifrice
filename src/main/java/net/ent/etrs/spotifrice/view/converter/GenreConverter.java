@@ -1,4 +1,4 @@
-package net.ent.etrs.spotifrice.utils;
+package net.ent.etrs.spotifrice.view.converter;
 
 
 import net.ent.etrs.spotifrice.model.references.Genre;

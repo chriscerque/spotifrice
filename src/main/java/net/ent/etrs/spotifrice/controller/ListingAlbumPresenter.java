@@ -4,11 +4,14 @@ package net.ent.etrs.spotifrice.controller;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import net.ent.etrs.spotifrice.model.entities.Album;
 import net.ent.etrs.spotifrice.model.entities.RessourceMp3;
 import net.ent.etrs.spotifrice.model.facade.FacadeMetier;
+import net.ent.etrs.spotifrice.model.facade.exceptions.BusinessException;
+import net.ent.etrs.spotifrice.view.utils.AlerteUtils;
 
 import java.util.Collection;
 
@@ -25,8 +28,13 @@ public class ListingAlbumPresenter {
     private FacadeMetier leMetier = new FacadeMetier();
 
     public void initialize() {
-        this.ol.addAll(leMetier.listerLesAlbums());
-        cbAlbums.setItems(ol);
+        try {
+            this.ol.addAll(leMetier.listerLesAlbums());
+            cbAlbums.setItems(ol);
+        } catch (BusinessException e) {
+            AlerteUtils.afficherExceptionDansAlerte(e, Alert.AlertType.ERROR);
+        }
+
     }
 
     public void listerContenuAlbum() {

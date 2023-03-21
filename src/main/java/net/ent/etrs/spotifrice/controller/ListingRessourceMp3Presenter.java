@@ -19,8 +19,10 @@ import net.ent.etrs.commons.utils.mp3Utils.SongEntry;
 import net.ent.etrs.spotifrice.model.entities.Album;
 import net.ent.etrs.spotifrice.model.entities.RessourceMp3;
 import net.ent.etrs.spotifrice.model.facade.FacadeMetier;
-import net.ent.etrs.spotifrice.utils.GenreConverter;
-import net.ent.etrs.spotifrice.view.Screens;
+import net.ent.etrs.spotifrice.model.facade.exceptions.BusinessException;
+import net.ent.etrs.spotifrice.view.converter.GenreConverter;
+import net.ent.etrs.spotifrice.view.references.Screens;
+import net.ent.etrs.spotifrice.view.utils.AlerteUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,15 +56,17 @@ public class ListingRessourceMp3Presenter {
 
     @FXML
     public void initialize() {
-        this.ol.addAll(leMetier.listerLesRessourceMp3());
-        this.tvRessourceMp3.setItems(ol);
-        miStop.setDisable(true);
+        try {
+            this.ol.addAll(leMetier.listerLesRessourceMp3());
 
-        this.tcTitre.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getTitre()));
-        this.tcAlbum.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getSonAlbum().getNom()));
-        this.tcGenre.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getSonGenre().toString()));
+            this.tvRessourceMp3.setItems(ol);
+            miStop.setDisable(true);
 
-        //Sur l'appui de la touche F11, la musique commence a lire
+            this.tcTitre.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getTitre()));
+            this.tcAlbum.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getSonAlbum().getNom()));
+            this.tcGenre.setCellValueFactory((param) -> new SimpleStringProperty(param.getValue().getSonGenre().toString()));
+
+            //Sur l'appui de la touche F11, la musique commence a lire
 //        tvRessourceMp3.addEventHandler(KeyEvent.KEY_PRESSED, new EventHandler<KeyEvent>() {
 //            public void handle(KeyEvent keyevent) {
 //                if (keyevent.getCode().equals(KeyCode.F11)) {
@@ -70,79 +74,93 @@ public class ListingRessourceMp3Presenter {
 //                }
 //            }
 //        });
-        tvRessourceMp3.addEventHandler(KeyEvent.KEY_PRESSED, this::handlePlay);
+            tvRessourceMp3.addEventHandler(KeyEvent.KEY_PRESSED, this::handlePlay);
+        } catch (BusinessException e) {
+            AlerteUtils.afficherExceptionDansAlerte(e, Alert.AlertType.ERROR);
+        }
     }
 
     public void importer() {
-        FileChooser fileChooser = new FileChooser();
+        try {
+            FileChooser fileChooser = new FileChooser();
 
-        fileChooser.setTitle("Selectionner les fichiers mp3");
+            fileChooser.setTitle("Selectionner les fichiers mp3");
 
-        fileChooser.setInitialDirectory(new File("D:\\"));
+            fileChooser.setInitialDirectory(new File("D:\\"));
 
-        fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mp3 files", "*.mp3"));
+            fileChooser.getExtensionFilters().addAll(new FileChooser.ExtensionFilter("mp3 files", "*.mp3"));
 
-        List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
+            List<File> selectedFiles = fileChooser.showOpenMultipleDialog(null);
 
 
-        if (selectedFiles != null) {
-            int cpt = 0;
-            for (File file : selectedFiles) {
-                //Tester en 1 er lieu si la ressourcemp3 n'est pas deja referencée en base
-                //requete select r from RessourceMp3 r  where r.chemminComplet=:param ( param=file.getAbsolutePath())
+            if (selectedFiles != null) {
+                int cpt = 0;
+                for (File file : selectedFiles) {
+                    //Tester en 1 er lieu si la ressourcemp3 n'est pas deja referencée en base
+                    //requete select r from RessourceMp3 r  where r.chemminComplet=:param ( param=file.getAbsolutePath())
 
-                if (!leMetier.estDejaReference(file.getAbsolutePath())) {
-                    //1-Besoin de PRSIAnalyzer
-                    SongEntry entree = Mp3Analyzer.analyze(new File(file.getAbsolutePath()));
-                    //TODO
-                    System.out.println("entree : " + entree);
-                    //2-A partir de ce SongEntry : je reinstancie une ressourceMp3
-                    RessourceMp3 mp3 = new RessourceMp3();
-                    mp3.setTitre(entree.getTitle());
-                    mp3.setCheminComplet(file.getAbsolutePath());
-                    mp3.setTaille(entree.getSize());
-                    mp3.setSonGenre(GenreConverter.convertir(entree.getMusicGenre()));
-                    //Test (GENRE_INCONNU)
-                    //mp3.setSonGenre(GenreConverter.convertir("Groove"));
+                    if (!leMetier.estDejaReference(file.getAbsolutePath())) {
+                        //1-Besoin de PRSIAnalyzer
+                        SongEntry entree = Mp3Analyzer.analyze(new File(file.getAbsolutePath()));
+                        //TODO
+                        System.out.println("entree : " + entree);
+                        //2-A partir de ce SongEntry : je reinstancie une ressourceMp3
+                        RessourceMp3 mp3 = new RessourceMp3();
+                        mp3.setTitre(entree.getTitle());
+                        mp3.setCheminComplet(file.getAbsolutePath());
+                        mp3.setTaille(entree.getSize());
+                        mp3.setSonGenre(GenreConverter.convertir(entree.getMusicGenre()));
+                        //Test (GENRE_INCONNU)
+                        //mp3.setSonGenre(GenreConverter.convertir("Groove"));
 
-                    Optional<Album> optAlbum = leMetier.recupererAlbumParSonNom(entree.getAlbum());
-                    Album album;
-                    //Si il existe deja en base j'ai un album attaché sinon j'en crée un
-                    if (optAlbum.isEmpty()) {
-                        //Attention l'album est detaché
-                        album = new Album();
-                        album.setNom(entree.getAlbum());
-                        album.setArtiste(entree.getArtist());
+                        Optional<Album> optAlbum = null;
 
-                    } else {
-                        album = optAlbum.get();
+                        optAlbum = leMetier.recupererAlbumParSonNom(entree.getAlbum());
+
+                        Album album;
+                        //Si il existe deja en base j'ai un album attaché sinon j'en crée un
+                        if (optAlbum.isEmpty()) {
+                            //Attention l'album est detaché
+                            album = new Album();
+                            album.setNom(entree.getAlbum());
+                            album.setArtiste(entree.getArtist());
+
+                        } else {
+                            album = optAlbum.get();
+                        }
+
+                        mp3.setSonAlbum(album);
+                        //A titre de coherene "memoire"
+                        album.ajouterRessourceMp3(mp3);
+
+                        //Persistence bdd
+                        leMetier.ajouter(mp3);
+                        //Visuel
+                        ol.add(mp3);
+                        cpt++;
                     }
 
-                    mp3.setSonAlbum(album);
-                    //A titre de coherene "memoire"
-                    album.ajouterRessourceMp3(mp3);
-
-                    //Persistence bdd
-                    leMetier.ajouter(mp3);
-                    //Visuel
-                    ol.add(mp3);
-                    cpt++;
                 }
 
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setContentText(cpt + " mp3 référencés");
+                alert.showAndWait();
+            } else {
+                System.out.println("Selection mp3 annulée");
             }
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setContentText(cpt + " mp3 référencés");
-            alert.showAndWait();
-        } else {
-            System.out.println("Selection mp3 annulée");
+        } catch (BusinessException e) {
+            AlerteUtils.afficherExceptionDansAlerte(e, Alert.AlertType.ERROR);
         }
     }
 
     public void supprimer() {
-        RessourceMp3 mp3Selectionne = this.tvRessourceMp3.getSelectionModel().getSelectedItem();
-        leMetier.supprimer(mp3Selectionne);
-        this.ol.remove(mp3Selectionne);
+        try {
+            RessourceMp3 mp3Selectionne = this.tvRessourceMp3.getSelectionModel().getSelectedItem();
+            leMetier.supprimer(mp3Selectionne);
+            this.ol.remove(mp3Selectionne);
+        } catch (BusinessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void detailler() {
@@ -205,8 +223,7 @@ public class ListingRessourceMp3Presenter {
             VBox sceneListingAlbum = (VBox) FXMLLoader.load(getClass().getResource(Screens.SCREEN_LISTER_ALBUMS));
             sceneCourante.setRoot(sceneListingAlbum);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            AlerteUtils.afficherExceptionDansAlerte(e, Alert.AlertType.ERROR);
         }
 
     }
