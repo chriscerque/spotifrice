@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:controller="net.ent.etrs.spotifrice.controller.ListingAlbumPresenter"
+      prefHeight="272.0"
+      prefWidth="493.0" xmlns="http://javafx.com/javafx/8.0.111">
+    <children>
+        <fx:include source="BarreMenu.fxml"/>
+        <ComboBox onAction="#listerContenuAlbum" fx:id="cbAlbums" prefWidth="150.0" promptText="Choisir un album"/>
+        <Label id="blanc" fx:id="lblRessourceMp3" prefHeight="138.0" prefWidth="208.0"/>
+    </children>
+</VBox>

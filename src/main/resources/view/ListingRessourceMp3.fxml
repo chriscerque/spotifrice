@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" prefHeight="272.0" prefWidth="493.0" xmlns="http://javafx.com/javafx/8.0.111"
+      fx:controller="net.ent.etrs.spotifrice.controller.ListingRessourceMp3Presenter">
+    <children>
+        <fx:include source="BarreMenu.fxml"/>
+        <TableView fx:id="tvRessourceMp3" prefHeight="278.0" prefWidth="493.0">
+            <columns>
+                <TableColumn fx:id="tcTitre" prefWidth="195.0" text="Titre"/>
+                <TableColumn fx:id="tcAlbum" prefWidth="179.0" text="Album"/>
+                <TableColumn fx:id="tcGenre" prefWidth="118.0" text="Genre"/>
+            </columns>
+            <contextMenu>
+                <ContextMenu>
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#detailler" text="Detailler"/>
+                        <MenuItem mnemonicParsing="false" fx:id="miSupprimer" onAction="#supprimer" text="Supprimer"/>
+                        <MenuItem mnemonicParsing="false" fx:id="miPlay" onAction="#play" text="Play"/>
+                        <MenuItem mnemonicParsing="false" fx:id="miStop" onAction="#stop" text="Stop"/>
+                        <SeparatorMenuItem mnemonicParsing="false"/>
+                        <MenuItem mnemonicParsing="false" onAction="#importer" text="Importer des mp3"/>
+                    </items>
+                </ContextMenu>
+            </contextMenu>
+        </TableView>
+    </children>
+</VBox>
